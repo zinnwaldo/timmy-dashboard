@@ -1,0 +1,774 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Timmy Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=Patrick+Hand&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+@keyframes fadeIn { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes sway { 0%, 100% { transform: rotate(-1deg); } 50% { transform: rotate(1deg); } }
+@keyframes slideIn { from { opacity: 0; transform: translateX(20px); } to { opacity: 1; transform: translateX(0); } }
+@keyframes popIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+:root {
+  --bg: #faf3e8; --card: #fffdf8; --card-shadow: rgba(139,109,71,0.12);
+  --text: #3d2e1f; --muted: #8b7355; --border: #d4c4a8; --stitch: #a0845c;
+  --accent: #e07b4c; --accent2: #d4563a; --blue: #5b8fb9; --green: #6a9e5f;
+  --yellow: #d4a83a; --red: #c94a3a; --purple: #8b6baa;
+  --q1: #c94a3a; --q2: #d4a83a; --q3: #e07b4c; --q4: #8b7355; --success: #6a9e5f;
+  --fabric-light: repeating-linear-gradient(0deg, transparent, transparent 14px, rgba(160,132,92,0.06) 14px, rgba(160,132,92,0.06) 15px),
+                  repeating-linear-gradient(90deg, transparent, transparent 14px, rgba(160,132,92,0.06) 14px, rgba(160,132,92,0.06) 15px);
+}
+
+body { background: var(--bg); background-image: var(--fabric-light); color: var(--text); font-family: 'Nunito', -apple-system, sans-serif; padding: 24px; min-height: 100vh; }
+
+/* HEADER */
+.header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 28px; animation: fadeIn 0.5s ease; }
+h1 { font-family: 'Patrick Hand', cursive; font-size: 36px; font-weight: 400; color: var(--accent2); text-shadow: 1px 1px 0 rgba(212,86,58,0.1); }
+.subtitle { color: var(--muted); margin-top: 4px; font-size: 13px; font-style: italic; }
+.badge { background: var(--card); border: 2px dashed var(--green); border-radius: 24px; padding: 7px 18px; font-size: 12px; font-weight: 700; color: var(--green); box-shadow: 2px 3px 0 rgba(106,158,95,0.15); animation: sway 3s ease-in-out infinite; }
+.needle-deco { display: flex; align-items: center; gap: 8px; margin-bottom: 4px; }
+.needle-deco .thread { width: 50px; height: 2px; background: repeating-linear-gradient(90deg, var(--accent) 0, var(--accent) 5px, transparent 5px, transparent 10px); }
+.thread-line { height: 3px; background: repeating-linear-gradient(90deg, var(--stitch) 0, var(--stitch) 8px, transparent 8px, transparent 16px); margin: 6px 0 22px; }
+
+/* TABS */
+.tabs { display: flex; gap: 8px; margin-bottom: 22px; flex-wrap: wrap; }
+.tab { background: var(--card); color: var(--text); border: 2px dashed var(--border); border-radius: 10px; padding: 8px 18px; font-size: 13px; font-family: 'Patrick Hand', cursive; cursor: pointer; transition: all 0.25s; box-shadow: 2px 3px 0 var(--card-shadow); }
+.tab:hover { transform: translateY(-2px); box-shadow: 3px 5px 0 var(--card-shadow); }
+.tab.active { background: var(--accent); color: #fff; border-color: var(--accent2); box-shadow: 2px 3px 0 rgba(224,123,76,0.3); }
+.patch { display: inline-block; width: 8px; height: 8px; border: 1.5px dashed var(--stitch); border-radius: 50%; margin-right: 4px; vertical-align: middle; }
+.tab.active .patch { border-color: rgba(255,255,255,0.5); }
+
+/* LAYOUT */
+.main-layout { display: flex; gap: 20px; }
+.main-content { flex: 1; min-width: 0; }
+.side-panel { width: 380px; flex-shrink: 0; position: sticky; top: 24px; max-height: calc(100vh - 48px); overflow-y: auto; }
+@media (max-width: 900px) { .main-layout { flex-direction: column; } .side-panel { width: 100%; position: static; max-height: none; } }
+
+/* GRID */
+.grid { display: grid; gap: 16px; margin-bottom: 22px; }
+.grid-4 { grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); }
+.grid-2 { grid-template-columns: 1fr 1fr; }
+@media (max-width: 700px) { .grid-2 { grid-template-columns: 1fr; } }
+
+/* CARD */
+.card { background: var(--card); border: 2px dashed var(--border); border-radius: 14px; padding: 18px 22px; box-shadow: 3px 4px 0 var(--card-shadow); position: relative; animation: fadeIn 0.5s ease backwards; }
+.card::before { content: ''; position: absolute; inset: 4px; border: 1.5px dashed rgba(160,132,92,0.15); border-radius: 11px; pointer-events: none; }
+.card::after { content: ''; position: absolute; top: 7px; left: 7px; right: 7px; bottom: 7px; background: radial-gradient(circle at 0 0, var(--stitch) 1.5px, transparent 1.5px), radial-gradient(circle at 100% 0, var(--stitch) 1.5px, transparent 1.5px), radial-gradient(circle at 0 100%, var(--stitch) 1.5px, transparent 1.5px), radial-gradient(circle at 100% 100%, var(--stitch) 1.5px, transparent 1.5px); pointer-events: none; }
+
+/* STAT */
+.stat { border-left: 4px solid var(--accent); border-left-style: solid; }
+.stat-label { color: var(--muted); font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 4px; }
+.stat-value { font-family: 'Patrick Hand', cursive; font-size: 38px; line-height: 1; }
+.stat-sub { color: var(--muted); font-size: 11px; margin-top: 4px; font-style: italic; }
+
+h3 { font-family: 'Patrick Hand', cursive; font-size: 18px; font-weight: 400; margin-bottom: 14px; color: var(--accent2); display: inline-block; position: relative; }
+h3::after { content: ''; position: absolute; bottom: -3px; left: 0; width: 100%; height: 2px; background: repeating-linear-gradient(90deg, var(--stitch) 0, var(--stitch) 6px, transparent 6px, transparent 12px); }
+
+/* MATRIX */
+.matrix { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.matrix-cell { border: 2px dashed; border-radius: 12px; padding: 14px; display: flex; flex-direction: column; align-items: center; text-align: center; background: var(--card); box-shadow: 2px 3px 0 var(--card-shadow); transition: transform 0.2s; cursor: pointer; }
+.matrix-cell:hover { transform: translateY(-2px) rotate(0.5deg); }
+.matrix-q { font-family: 'Patrick Hand', cursive; font-size: 14px; }
+.matrix-count { font-family: 'Patrick Hand', cursive; font-size: 32px; }
+.matrix-label { font-size: 10px; color: var(--muted); }
+
+/* REMINDER ROW — now clickable */
+.reminder-row { display: flex; justify-content: space-between; align-items: center; padding: 12px 14px; margin: 0 -14px; border-bottom: 2px dashed var(--border); cursor: pointer; border-radius: 8px; transition: all 0.2s; }
+.reminder-row:hover { background: rgba(224,123,76,0.06); transform: translateX(3px); }
+.reminder-row:last-child { border-bottom: none; }
+.reminder-row.selected { background: rgba(224,123,76,0.1); border-left: 3px solid var(--accent); }
+.reminder-title { font-size: 13px; font-weight: 700; }
+.reminder-due { color: var(--muted); font-size: 11px; margin-top: 2px; font-style: italic; }
+.reminder-hint { font-size: 11px; color: var(--accent); margin-top: 3px; max-width: 280px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.reminder-hint::before { content: '📌 '; }
+
+/* TAGS */
+.tag { padding: 3px 8px; border-radius: 6px; font-size: 10px; font-weight: 700; border: 1.5px dashed transparent; }
+.tag-overdue { background: rgba(201,74,58,0.1); color: var(--q1); border-color: rgba(201,74,58,0.3); }
+.tag-today { background: rgba(212,168,58,0.12); color: var(--q2); border-color: rgba(212,168,58,0.3); }
+.tag-done { background: rgba(106,158,95,0.12); color: var(--success); border-color: rgba(106,158,95,0.3); }
+.tag-coming { background: rgba(91,143,185,0.12); color: var(--blue); border-color: rgba(91,143,185,0.3); }
+.tag-q { background: rgba(160,132,92,0.1); color: var(--stitch); margin-left: 6px; border-color: rgba(160,132,92,0.3); }
+
+/* INSIGHTS */
+.insight { padding: 12px 14px; background: linear-gradient(135deg, rgba(224,123,76,0.06), rgba(212,168,58,0.06)); border: 1.5px dashed var(--border); border-radius: 8px; font-size: 13px; color: var(--muted); border-left: 3px solid var(--accent); border-left-style: solid; margin-bottom: 8px; }
+
+/* SIDE PANEL — Edit Panel */
+.edit-panel { animation: slideIn 0.3s ease; }
+.edit-panel .card { border-color: var(--accent); }
+.edit-panel h3 { color: var(--accent2); }
+.edit-empty { text-align: center; padding: 40px 20px; color: var(--muted); font-style: italic; font-size: 14px; }
+.edit-empty-icon { font-size: 48px; margin-bottom: 12px; opacity: 0.5; }
+
+/* FORM ELEMENTS */
+.form-group { margin-bottom: 14px; }
+.form-label { font-size: 11px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 5px; display: block; }
+.form-input, .form-textarea, .form-select { width: 100%; background: var(--bg); border: 2px dashed var(--border); border-radius: 8px; padding: 10px 12px; font-family: 'Nunito', sans-serif; font-size: 13px; color: var(--text); transition: border-color 0.2s; resize: vertical; }
+.form-input:focus, .form-textarea:focus, .form-select:focus { outline: none; border-color: var(--accent); background: #fff; }
+.form-textarea { min-height: 70px; line-height: 1.5; }
+.form-textarea.large { min-height: 100px; }
+
+/* TIMMY INSTRUCTIONS — special field */
+.timmy-field { background: linear-gradient(135deg, rgba(91,143,185,0.08), rgba(139,107,170,0.08)); border-color: var(--blue); }
+.timmy-field:focus { border-color: var(--purple); }
+.timmy-label { color: var(--blue); }
+.timmy-label::before { content: '🦞 '; }
+
+/* ACTION TAGS */
+.action-tags { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
+.action-tag { padding: 4px 10px; border-radius: 6px; font-size: 11px; font-weight: 700; cursor: pointer; border: 1.5px dashed; transition: all 0.2s; }
+.action-tag:hover { transform: scale(1.05); }
+.action-tag.selected { box-shadow: 0 0 0 2px var(--accent); }
+.action-tag[data-action="auto"] { background: rgba(91,143,185,0.12); color: var(--blue); border-color: rgba(91,143,185,0.3); }
+.action-tag[data-action="remind"] { background: rgba(212,168,58,0.12); color: var(--q2); border-color: rgba(212,168,58,0.3); }
+.action-tag[data-action="research"] { background: rgba(139,107,170,0.12); color: var(--purple); border-color: rgba(139,107,170,0.3); }
+.action-tag[data-action="draft"] { background: rgba(106,158,95,0.12); color: var(--green); border-color: rgba(106,158,95,0.3); }
+.action-tag[data-action="delegate"] { background: rgba(224,123,76,0.12); color: var(--accent); border-color: rgba(224,123,76,0.3); }
+.action-tag[data-action="archive"] { background: rgba(139,115,85,0.12); color: var(--q4); border-color: rgba(139,115,85,0.3); }
+
+/* BUTTONS */
+.btn { padding: 9px 18px; border-radius: 8px; font-family: 'Patrick Hand', cursive; font-size: 15px; cursor: pointer; border: 2px dashed; transition: all 0.2s; }
+.btn:hover { transform: translateY(-1px); }
+.btn-primary { background: var(--accent); color: #fff; border-color: var(--accent2); box-shadow: 2px 3px 0 rgba(224,123,76,0.3); }
+.btn-export { background: var(--blue); color: #fff; border-color: #4a7a9e; box-shadow: 2px 3px 0 rgba(91,143,185,0.3); }
+.btn-outline { background: transparent; color: var(--muted); border-color: var(--border); }
+.btn-sm { padding: 5px 12px; font-size: 13px; }
+.btn-row { display: flex; gap: 8px; margin-top: 14px; }
+
+/* EXPORT MODAL */
+.modal-overlay { position: fixed; inset: 0; background: rgba(61,46,31,0.5); display: flex; align-items: center; justify-content: center; z-index: 1000; animation: fadeIn 0.2s; }
+.modal { background: var(--card); border: 2px dashed var(--accent); border-radius: 16px; padding: 28px; max-width: 600px; width: 90%; max-height: 80vh; overflow-y: auto; box-shadow: 6px 8px 0 var(--card-shadow); animation: popIn 0.3s ease; }
+.modal h3 { font-size: 22px; margin-bottom: 16px; }
+.modal pre { background: var(--bg); border: 2px dashed var(--border); border-radius: 8px; padding: 14px; font-size: 12px; line-height: 1.5; overflow-x: auto; white-space: pre-wrap; word-break: break-word; max-height: 400px; overflow-y: auto; }
+.modal-close { position: absolute; top: 12px; right: 16px; font-size: 20px; cursor: pointer; color: var(--muted); }
+
+/* ACHIEVEMENTS & KARMA (kept compact) */
+.achievement-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+.achievement { border: 2px dashed var(--border); border-radius: 12px; padding: 14px 10px; text-align: center; background: var(--card); opacity: 0.5; box-shadow: 2px 3px 0 var(--card-shadow); transition: transform 0.2s; }
+.achievement:hover { transform: rotate(-1deg) scale(1.02); }
+.achievement.unlocked { opacity: 1; background: linear-gradient(135deg, #e07b4c, #d4563a); border-color: var(--accent2); color: #fff; }
+.achievement-icon { font-size: 26px; }
+.achievement-name { font-family: 'Patrick Hand', cursive; font-size: 13px; margin-top: 6px; }
+.achievement-progress { font-size: 10px; color: var(--muted); margin-top: 3px; }
+.karma-gauge { display: flex; align-items: center; gap: 30px; justify-content: center; margin-bottom: 14px; }
+
+/* DETOX */
+.quote-box { background: var(--card); border: 2px dashed var(--border); border-radius: 12px; padding: 22px; margin-bottom: 20px; border-left: 4px solid var(--accent); border-left-style: solid; box-shadow: 3px 4px 0 var(--card-shadow); position: relative; }
+.quote-box::before { content: '\201C'; font-family: 'Patrick Hand', cursive; font-size: 50px; color: rgba(224,123,76,0.2); position: absolute; top: 2px; left: 14px; }
+.quote-box p { color: var(--muted); font-size: 13px; line-height: 1.6; padding-left: 24px; font-style: italic; }
+.detox-item { background: var(--card); border: 2px dashed var(--border); border-radius: 12px; padding: 14px 20px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; box-shadow: 2px 3px 0 var(--card-shadow); cursor: pointer; transition: transform 0.2s; }
+.detox-item:hover { transform: translateX(4px); }
+.detox-cat { padding: 4px 10px; border-radius: 6px; font-size: 11px; font-weight: 700; border: 1.5px dashed; }
+
+/* FOOTER */
+.footer { margin-top: 30px; padding-top: 14px; border-top: 2px dashed var(--border); color: var(--muted); font-size: 11px; text-align: center; font-family: 'Patrick Hand', cursive; }
+
+/* UTILITY */
+.hidden { display: none; }
+.done { opacity: 0.35; text-decoration: line-through; }
+
+/* CONTEXT INDICATOR */
+.has-context::after { content: '📌'; font-size: 10px; margin-left: 6px; }
+.has-timmy::after { content: '🦞'; font-size: 10px; margin-left: 4px; }
+.has-both::after { content: '📌🦞'; font-size: 10px; margin-left: 6px; }
+
+/* TOAST */
+.toast { position: fixed; bottom: 24px; right: 24px; background: var(--green); color: #fff; padding: 12px 20px; border-radius: 10px; font-size: 13px; font-weight: 700; box-shadow: 3px 4px 0 rgba(106,158,95,0.3); border: 2px dashed rgba(255,255,255,0.3); animation: slideIn 0.3s ease; z-index: 999; }
+
+/* CHECKBOX */
+.check-btn { width: 26px; height: 26px; border-radius: 50%; border: 2.5px dashed var(--border); background: var(--card); cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 14px; transition: all 0.25s; flex-shrink: 0; margin-right: 10px; }
+.check-btn:hover { border-color: var(--green); background: rgba(106,158,95,0.08); transform: scale(1.1); }
+.check-btn.checked { background: var(--green); border-color: var(--green); border-style: solid; color: #fff; animation: popIn 0.3s ease; }
+.reminder-row-inner { display: flex; align-items: flex-start; flex: 1; min-width: 0; }
+
+/* ADD TASK */
+.add-task-bar { display: flex; gap: 8px; margin-bottom: 14px; }
+.add-task-bar .form-input { flex: 1; border-radius: 10px; padding: 10px 14px; font-size: 13px; }
+.add-task-bar .btn { white-space: nowrap; }
+
+/* DONE ANIMATION */
+@keyframes strikethrough { from { width: 0; } to { width: 100%; } }
+.reminder-row.just-done .reminder-title { position: relative; }
+.reminder-row.just-done .reminder-title::after { content: ''; position: absolute; left: 0; top: 50%; height: 2px; background: var(--green); animation: strikethrough 0.4s ease forwards; }
+
+/* FILTER BAR */
+.filter-bar { display: flex; gap: 6px; margin-bottom: 12px; flex-wrap: wrap; }
+.filter-chip { padding: 4px 12px; border-radius: 8px; font-size: 11px; font-weight: 700; cursor: pointer; border: 1.5px dashed var(--border); background: var(--card); color: var(--muted); transition: all 0.2s; }
+.filter-chip:hover { border-color: var(--accent); }
+.filter-chip.active { background: var(--accent); color: #fff; border-color: var(--accent2); }
+.count-badge { display: inline-block; background: rgba(0,0,0,0.1); border-radius: 4px; padding: 0 5px; margin-left: 4px; font-size: 10px; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div>
+    <div class="needle-deco"><span style="font-size: 18px;">🪡</span><div class="thread"></div></div>
+    <h1>🦞 Timmy Dashboard</h1>
+    <p class="subtitle">Dein persönlicher Chief of Staff — Stand: 05.04.2026 — Klicke auf einen Punkt zum Bearbeiten</p>
+  </div>
+  <div style="display: flex; gap: 10px; align-items: center;">
+    <button class="btn btn-export btn-sm" onclick="exportForTimmy()">🦞 Für Timmy exportieren</button>
+    <div class="badge">✿ System aktiv</div>
+  </div>
+</div>
+
+<div class="thread-line"></div>
+
+<div class="tabs" id="tabs">
+  <button class="tab active" onclick="showTab('overview')"><span class="patch"></span>Übersicht</button>
+  <button class="tab" onclick="showTab('reminders')"><span class="patch"></span>Reminder</button>
+  <button class="tab" onclick="showTab('eisenhower')"><span class="patch"></span>Eisenhower</button>
+  <button class="tab" onclick="showTab('karma')"><span class="patch"></span>Karma</button>
+  <button class="tab" onclick="showTab('detox')"><span class="patch"></span>Detox</button>
+</div>
+
+<div class="main-layout">
+<div class="main-content">
+
+<!-- OVERVIEW (dynamic) -->
+<div id="overview"></div>
+
+<!-- REMINDERS -->
+<div id="reminders" class="hidden">
+  <div class="card" id="reminder-list"></div>
+</div>
+
+<!-- EISENHOWER -->
+<div id="eisenhower" class="hidden">
+  <div class="grid grid-2" id="eisenhower-grid"></div>
+</div>
+
+<!-- KARMA -->
+<div id="karma" class="hidden">
+  <div class="card" style="margin-bottom: 20px; text-align: center">
+    <h3>Karma-Score</h3>
+    <div class="karma-gauge">
+      <svg width="140" height="140" viewBox="0 0 160 160">
+        <circle cx="80" cy="80" r="60" fill="none" stroke="var(--border)" stroke-width="12" stroke-dasharray="6 4"/>
+        <circle cx="80" cy="80" r="60" fill="none" stroke="var(--accent)" stroke-width="12" stroke-linecap="round" stroke-dasharray="377" stroke-dashoffset="377" transform="rotate(-90 80 80)"/>
+        <text x="80" y="72" text-anchor="middle" fill="var(--text)" font-size="36" font-weight="700" font-family="Patrick Hand, cursive">0</text>
+        <text x="80" y="95" text-anchor="middle" fill="var(--muted)" font-size="12">Karma</text>
+      </svg>
+      <div style="text-align: left">
+        <div style="color: var(--muted); font-size: 12px; text-transform: uppercase; letter-spacing: 1px">Zeitgenauigkeit</div>
+        <div style="font-family: 'Patrick Hand', cursive; font-size: 28px">—</div>
+        <div style="color: var(--accent); font-size: 12px; margin-top: 6px; font-weight: 700">Streak: 0 Tage</div>
+      </div>
+    </div>
+    <p style="color: var(--muted); font-size: 13px; font-style: italic">Karma startet bei 0. Nach den ersten Tageszyklen beginnt die Lernschleife.</p>
+  </div>
+  <div class="card">
+    <h3>Achievements</h3>
+    <div class="achievement-grid">
+      <div class="achievement"><div class="achievement-icon">🔥</div><div class="achievement-name">Phoenix</div><div class="achievement-progress">0/5</div></div>
+      <div class="achievement"><div class="achievement-icon">🧘</div><div class="achievement-name">Zen-Meister</div><div class="achievement-progress">0/7 Tage</div></div>
+      <div class="achievement"><div class="achievement-icon">👑</div><div class="achievement-name">Quick-Win-König</div><div class="achievement-progress">0/20</div></div>
+      <div class="achievement"><div class="achievement-icon">⏱️</div><div class="achievement-name">Zeitflüsterer</div><div class="achievement-progress">0%</div></div>
+      <div class="achievement"><div class="achievement-icon">✅</div><div class="achievement-name">Inbox Zero</div><div class="achievement-progress">11 überfällig</div></div>
+      <div class="achievement"><div class="achievement-icon">✨</div><div class="achievement-name">Detox-Held</div><div class="achievement-progress">0/10</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- DETOX -->
+<div id="detox" class="hidden" id="detox-list"></div>
+
+</div><!-- /main-content -->
+
+<!-- SIDE PANEL -->
+<div class="side-panel" id="sidePanel">
+  <div class="edit-panel" id="editPanel">
+    <div class="card" style="border-color: var(--border)">
+      <div class="edit-empty">
+        <div class="edit-empty-icon">🪡</div>
+        <div>Klicke auf einen Reminder,<br>um Kontext & Hinweise hinzuzufügen</div>
+        <div style="margin-top: 12px; font-size: 12px; color: var(--stitch)">Timmy nutzt diese Infos für<br>bessere Automatisierung</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+</div><!-- /main-layout -->
+
+<div class="footer">🪡 Timmy Dashboard v3.0 — Stitch Edition — Interaktiv mit Kontext-Bearbeitung</div>
+
+<!-- MODAL CONTAINER -->
+<div id="modalContainer"></div>
+<!-- TOAST CONTAINER -->
+<div id="toastContainer"></div>
+
+<script>
+// ========== DEFAULT DATA ==========
+const defaultReminders = [
+  { id: 1, title: "Personalrat", due: "08.04.", status: "coming", quadrant: "Q2", context: "", timmyHint: "", action: "", priority: "medium", doneAt: null },
+  { id: 2, title: "Jacob Collier", due: "Heute", status: "today", quadrant: "Q1", context: "", timmyHint: "", action: "", priority: "high", doneAt: null },
+  { id: 3, title: "Klavierstimmer", due: "Heute", status: "today", quadrant: "Q1", context: "", timmyHint: "", action: "", priority: "high", doneAt: null },
+  { id: 4, title: "Openclaw messe trading typ", due: "15.03.", daysOver: 18, status: "overdue", quadrant: "Q1", context: "", timmyHint: "", action: "", priority: "high", doneAt: null },
+  { id: 5, title: "Finanzkonzept Wismar", due: "12.03.", daysOver: 21, status: "overdue", quadrant: "Q1", context: "", timmyHint: "", action: "", priority: "high", doneAt: null },
+  { id: 6, title: "Mail an Ataraxia", due: "09.03.", daysOver: 24, status: "overdue", quadrant: "Q1", context: "", timmyHint: "", action: "", priority: "high", doneAt: null },
+  { id: 7, title: "Timmy und Google Notebook", due: "Erledigt!", status: "done", quadrant: "", context: "", timmyHint: "", action: "", priority: "", doneAt: "2026-04-01" },
+  { id: 8, title: "System für Reminder-Aufgaben", due: "Erledigt!", status: "done", quadrant: "", context: "", timmyHint: "", action: "", priority: "", doneAt: "2026-04-01" },
+  { id: 9, title: "Setlisten 1€!", due: "23.02.", daysOver: 38, status: "overdue", quadrant: "Q3", context: "", timmyHint: "", action: "", priority: "low", doneAt: null },
+  { id: 10, title: "Ein Agent ist der Erleuchtung streben", due: "22.03.", daysOver: 11, status: "overdue", quadrant: "Q2", context: "", timmyHint: "", action: "", priority: "medium", doneAt: null },
+  { id: 11, title: "Neue Formate musikKlub", due: "22.02.", daysOver: 39, status: "overdue", quadrant: "Q3", context: "", timmyHint: "", action: "", priority: "low", doneAt: null },
+  { id: 12, title: "Business Ideen musikKlub", due: "22.02.", daysOver: 39, status: "overdue", quadrant: "Q3", context: "", timmyHint: "", action: "", priority: "low", doneAt: null },
+  { id: 13, title: "Film Sie glauben an Engel Herr Dvořák", due: "22.03.", daysOver: 11, status: "overdue", quadrant: "Q2", context: "", timmyHint: "", action: "", priority: "medium", doneAt: null },
+  { id: 14, title: "Musikund schreiben einscannen", due: "21.02.", daysOver: 40, status: "overdue", quadrant: "Q4", context: "", timmyHint: "", action: "", priority: "low", doneAt: null }
+];
+
+// ========== PERSISTENCE ==========
+const STORAGE_KEY = 'timmy_dashboard_v4';
+
+function loadData() {
+  try {
+    const saved = localStorage.getItem(STORAGE_KEY);
+    if (saved) return JSON.parse(saved);
+  } catch(e) { console.warn('localStorage nicht verfügbar, nutze In-Memory'); }
+  return null;
+}
+
+function saveData() {
+  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(reminders)); } catch(e) {}
+}
+
+let reminders = loadData() || JSON.parse(JSON.stringify(defaultReminders));
+let selectedId = null;
+let currentFilter = 'all';
+let nextId = Math.max(...reminders.map(r => r.id)) + 1;
+
+// ========== TOGGLE DONE ==========
+function toggleDone(id, evt) {
+  evt.stopPropagation();
+  const r = reminders.find(x => x.id === id);
+  if (!r) return;
+  if (r.status === 'done') {
+    r.status = r._prevStatus || 'coming';
+    r.doneAt = null;
+    delete r._prevStatus;
+    showToast('Wieder geöffnet: ' + r.title);
+  } else {
+    r._prevStatus = r.status;
+    r.status = 'done';
+    r.doneAt = new Date().toISOString().slice(0, 10);
+    showToast('Erledigt! ' + r.title);
+  }
+  saveData();
+  renderAll();
+  if (selectedId === id) renderEditPanel(r);
+}
+
+// ========== ADD TASK ==========
+function addTask() {
+  const input = document.getElementById('newTaskInput');
+  const title = input.value.trim();
+  if (!title) return;
+  reminders.push({
+    id: nextId++, title, due: new Date().toLocaleDateString('de-DE'), status: 'today',
+    quadrant: 'Q1', context: '', timmyHint: '', action: '', priority: 'medium', doneAt: null
+  });
+  input.value = '';
+  saveData();
+  renderAll();
+  showToast('Neue Aufgabe: ' + title);
+}
+
+// ========== RENDERING ==========
+function getStatusTag(r) {
+  const map = { overdue: ['überfällig', 'tag-overdue'], today: ['heute', 'tag-today'], done: ['erledigt', 'tag-done'], coming: ['kommend', 'tag-coming'] };
+  const [label, cls] = map[r.status] || ['', ''];
+  return `<span class="tag ${cls}">${label}</span>`;
+}
+
+function getContextIndicator(r) {
+  const hasCtx = r.context || r.action;
+  const hasTimmy = r.timmyHint;
+  if (hasCtx && hasTimmy) return ' has-both';
+  if (hasCtx) return ' has-context';
+  if (hasTimmy) return ' has-timmy';
+  return '';
+}
+
+function getFiltered() {
+  if (currentFilter === 'all') return reminders;
+  if (currentFilter === 'active') return reminders.filter(r => r.status !== 'done');
+  if (currentFilter === 'done') return reminders.filter(r => r.status === 'done');
+  if (currentFilter === 'overdue') return reminders.filter(r => r.status === 'overdue');
+  if (currentFilter === 'context') return reminders.filter(r => r.context || r.timmyHint);
+  return reminders;
+}
+
+function renderOverview() {
+  const c = document.getElementById('overview');
+  if (!c) return;
+  const active = reminders.filter(r => r.status !== 'done');
+  const overdue = reminders.filter(r => r.status === 'overdue');
+  const today = reminders.filter(r => r.status === 'today');
+  const done = reminders.filter(r => r.status === 'done');
+  const q1 = active.filter(r => r.quadrant === 'Q1').length;
+  const q2 = active.filter(r => r.quadrant === 'Q2').length;
+  const q3 = active.filter(r => r.quadrant === 'Q3').length;
+  const q4 = active.filter(r => r.quadrant === 'Q4').length;
+  const enriched = reminders.filter(r => r.context || r.timmyHint || r.action).length;
+
+  c.innerHTML = `
+  <div class="grid grid-4">
+    <div class="card stat" style="border-left-color: var(--blue)"><div class="stat-label">Gesamt aktiv</div><div class="stat-value">${active.length}</div></div>
+    <div class="card stat" style="border-left-color: var(--q1)"><div class="stat-label">Überfällig</div><div class="stat-value">${overdue.length}</div><div class="stat-sub">Brauchen Aufmerksamkeit</div></div>
+    <div class="card stat" style="border-left-color: var(--q2)"><div class="stat-label">Heute fällig</div><div class="stat-value">${today.length}</div></div>
+    <div class="card stat" style="border-left-color: var(--success)"><div class="stat-label">Erledigt</div><div class="stat-value">${done.length}</div><div class="stat-sub">${enriched} mit Kontext angereichert</div></div>
+  </div>
+  <div class="card" style="margin-bottom: 20px">
+    <h3>Eisenhower-Verteilung</h3>
+    <div class="matrix">
+      <div class="matrix-cell" style="border-color: var(--q1); background: rgba(201,74,58,0.05)"><div class="matrix-q" style="color: var(--q1)">Q1</div><div class="matrix-count">${q1}</div><div class="matrix-label">Sofort handeln</div></div>
+      <div class="matrix-cell" style="border-color: var(--q2); background: rgba(212,168,58,0.05)"><div class="matrix-q" style="color: var(--q2)">Q2</div><div class="matrix-count">${q2}</div><div class="matrix-label">Einplanen</div></div>
+      <div class="matrix-cell" style="border-color: var(--q3); background: rgba(224,123,76,0.05)"><div class="matrix-q" style="color: var(--q3)">Q3</div><div class="matrix-count">${q3}</div><div class="matrix-label">Schnell weg</div></div>
+      <div class="matrix-cell" style="border-color: var(--q4); background: rgba(139,115,85,0.05)"><div class="matrix-q" style="color: var(--q4)">Q4</div><div class="matrix-count">${q4}</div><div class="matrix-label">Detox?</div></div>
+    </div>
+  </div>
+  <div class="card">
+    <h3>Nächste Schritte</h3>
+    ${today.length ? `<div class="insight">⚠️ ${today.length} Reminder heute fällig: ${today.map(r=>r.title).join(' & ')}</div>` : ''}
+    ${overdue.length ? `<div class="insight">🧹 ${overdue.length} überfällige Reminder — Detox-Runde empfohlen</div>` : ''}
+    ${done.length ? `<div class="insight">✅ ${done.length} Reminder erledigt</div>` : ''}
+    ${enriched ? `<div class="insight">🦞 ${enriched} Aufgaben mit Timmy-Kontext angereichert</div>` : '<div class="insight">📌 Noch keine Aufgaben mit Kontext — klicke auf Reminder zum Bearbeiten!</div>'}
+  </div>`;
+}
+
+function renderReminders() {
+  const list = document.getElementById('reminder-list');
+  if (!list) return;
+  const filtered = getFiltered();
+  const counts = {
+    all: reminders.length,
+    active: reminders.filter(r => r.status !== 'done').length,
+    done: reminders.filter(r => r.status === 'done').length,
+    overdue: reminders.filter(r => r.status === 'overdue').length,
+    context: reminders.filter(r => r.context || r.timmyHint).length
+  };
+
+  let html = `<div class="add-task-bar">
+    <input class="form-input" id="newTaskInput" placeholder="Neue Aufgabe hinzufügen..." onkeydown="if(event.key==='Enter')addTask()">
+    <button class="btn btn-primary btn-sm" onclick="addTask()">+ Hinzufügen</button>
+  </div>
+  <div class="filter-bar">
+    <div class="filter-chip ${currentFilter==='all'?'active':''}" onclick="setFilter('all')">Alle<span class="count-badge">${counts.all}</span></div>
+    <div class="filter-chip ${currentFilter==='active'?'active':''}" onclick="setFilter('active')">Aktiv<span class="count-badge">${counts.active}</span></div>
+    <div class="filter-chip ${currentFilter==='done'?'active':''}" onclick="setFilter('done')">Erledigt<span class="count-badge">${counts.done}</span></div>
+    <div class="filter-chip ${currentFilter==='overdue'?'active':''}" onclick="setFilter('overdue')">Überfällig<span class="count-badge">${counts.overdue}</span></div>
+    <div class="filter-chip ${currentFilter==='context'?'active':''}" onclick="setFilter('context')">Mit Kontext<span class="count-badge">${counts.context}</span></div>
+  </div>
+  <h3>${filtered.length} Reminder — Klicke zum Bearbeiten</h3>`;
+
+  filtered.forEach(r => {
+    const sel = r.id === selectedId ? ' selected' : '';
+    const doneClass = r.status === 'done' ? ' done' : '';
+    const ctxClass = getContextIndicator(r);
+    const dueText = r.status === 'done' ? (r.doneAt ? `Erledigt am ${r.doneAt}` : 'Erledigt!') : (r.daysOver ? `Fällig: ${r.due} — ${r.daysOver} Tage überfällig` : `Fällig: ${r.due}`);
+    const hintLine = r.context ? `<div class="reminder-hint">${r.context.substring(0, 60)}</div>` : '';
+    const checked = r.status === 'done' ? ' checked' : '';
+
+    html += `<div class="reminder-row${sel}${doneClass}" onclick="selectReminder(${r.id})">
+      <div class="check-btn${checked}" onclick="toggleDone(${r.id}, event)" title="${r.status === 'done' ? 'Wieder öffnen' : 'Als erledigt markieren'}">${r.status === 'done' ? '✓' : ''}</div>
+      <div class="reminder-row-inner">
+        <div style="flex:1;min-width:0">
+          <div class="reminder-title${ctxClass}">${r.title}</div>
+          <div class="reminder-due">${dueText}</div>
+          ${hintLine}
+        </div>
+        <div style="display:flex;gap:4px;align-items:center;flex-shrink:0">${getStatusTag(r)}${r.quadrant ? `<span class="tag tag-q">${r.quadrant}</span>` : ''}</div>
+      </div>
+    </div>`;
+  });
+  list.innerHTML = html;
+}
+
+function setFilter(f) { currentFilter = f; renderReminders(); }
+
+function renderEisenhower() {
+  const grid = document.getElementById('eisenhower-grid');
+  if (!grid) return;
+  const quadrants = [
+    { key: 'Q1', label: 'Sofort handeln', color: '--q1', sub: 'Timmy startet Task Sessions' },
+    { key: 'Q2', label: 'Einplanen', color: '--q2', sub: 'Im Tagesplan mit Zeitfenster' },
+    { key: 'Q3', label: 'Schnell weg', color: '--q3', sub: 'Timmy recherchiert oder erinnert' },
+    { key: 'Q4', label: 'Detox-Kandidaten', color: '--q4', sub: 'Archivieren oder loslassen?' }
+  ];
+  let html = '';
+  quadrants.forEach(q => {
+    const items = reminders.filter(r => r.quadrant === q.key && r.status !== 'done');
+    html += `<div class="card" style="border-top: 4px solid var(${q.color}); border-top-style: solid">
+      <h3 style="color: var(${q.color})">${q.key} — ${q.label} (${items.length})</h3>`;
+    items.forEach(r => {
+      const ctxClass = getContextIndicator(r);
+      html += `<div class="insight" style="cursor: pointer; display: flex; align-items: center; gap: 8px;" onclick="selectReminder(${r.id}); showTab('reminders')">
+        <div class="check-btn${r.status==='done'?' checked':''}" onclick="toggleDone(${r.id}, event); event.stopPropagation();" style="width:22px;height:22px;font-size:11px">${r.status==='done'?'✓':''}</div>
+        <div><span class="${ctxClass}">• ${r.title}</span>
+        ${r.timmyHint ? `<br><small style="color: var(--blue)">🦞 ${r.timmyHint.substring(0, 50)}...</small>` : ''}</div>
+      </div>`;
+    });
+    if (!items.length) html += '<p style="color: var(--muted); font-size: 12px; font-style: italic">Alles erledigt!</p>';
+    html += `<p style="color: var(--muted); font-size: 11px; margin-top: 10px; font-style: italic">${q.sub}</p></div>`;
+  });
+  grid.innerHTML = html;
+}
+
+function renderDetox() {
+  const container = document.getElementById('detox');
+  if (!container) return;
+  const detoxItems = reminders.filter(r => r.daysOver && r.daysOver >= 30 && r.status !== 'done');
+  let html = `<div class="quote-box"><p>Manchmal ändern sich Prioritäten — und das ist okay. Hier sind Aufgaben, die vielleicht ihren Moment verpasst haben.</p></div>`;
+  detoxItems.forEach(r => {
+    const catLabel = r.daysOver >= 40 ? 'Zombie' : 'Unklar';
+    const catColor = r.daysOver >= 40 ? '--q1' : '--q3';
+    html += `<div class="detox-item" onclick="selectReminder(${r.id}); showTab('reminders')">
+      <div style="display:flex;align-items:center;gap:10px">
+        <div class="check-btn" onclick="toggleDone(${r.id}, event); event.stopPropagation();" style="width:24px;height:24px;font-size:12px"></div>
+        <div><div style="font-size: 14px; font-weight: 700">${r.title}</div><div style="color: var(--muted); font-size: 11px; margin-top: 3px; font-style: italic">Seit ${r.daysOver} Tagen überfällig</div></div>
+      </div>
+      <span class="detox-cat" style="background: rgba(201,74,58,0.1); color: var(${catColor}); border-color: var(${catColor})">${catLabel}</span>
+    </div>`;
+  });
+  const zombies = reminders.filter(r => r.daysOver >= 40 && r.status !== 'done').length;
+  const unclear = reminders.filter(r => r.daysOver >= 30 && r.daysOver < 40 && r.status !== 'done').length;
+  const archived = reminders.filter(r => r.status === 'done' && r.daysOver >= 30).length;
+  html += `<div class="grid grid-4" style="margin-top: 20px">
+    <div class="card stat" style="border-left-color: var(--q1)"><div class="stat-label">Zombies</div><div class="stat-value">${zombies}</div><div class="stat-sub">> 30 Tage</div></div>
+    <div class="card stat" style="border-left-color: var(--q3)"><div class="stat-label">Unklar</div><div class="stat-value">${unclear}</div><div class="stat-sub">Prüfen</div></div>
+    <div class="card stat" style="border-left-color: var(--success)"><div class="stat-label">Archiviert</div><div class="stat-value">${archived}</div><div class="stat-sub">Abgehakt</div></div>
+  </div>`;
+  container.innerHTML = html;
+}
+
+// ========== EDIT PANEL ==========
+function selectReminder(id) {
+  selectedId = id;
+  const r = reminders.find(x => x.id === id);
+  if (!r) return;
+  renderReminders();
+  renderEditPanel(r);
+}
+
+function renderEditPanel(r) {
+  const panel = document.getElementById('editPanel');
+  const actions = ['auto', 'remind', 'research', 'draft', 'delegate', 'archive'];
+  const actionLabels = { auto: '🤖 Auto', remind: '⏰ Erinnern', research: '🔍 Recherche', draft: '✍️ Entwurf', delegate: '👥 Delegieren', archive: '📦 Archiv' };
+  const isDone = r.status === 'done';
+
+  panel.innerHTML = `<div class="card edit-panel" style="border-color: var(--accent)">
+    <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px">
+      <h3 style="margin-bottom: 4px">✏️ ${r.title}</h3>
+      <button class="btn ${isDone ? 'btn-outline' : 'btn-primary'} btn-sm" onclick="toggleDone(${r.id}, event); renderEditPanel(reminders.find(x=>x.id===${r.id}))" style="flex-shrink:0">
+        ${isDone ? '↩️ Wieder öffnen' : '✓ Erledigt'}
+      </button>
+    </div>
+    <div style="margin-bottom: 14px">
+      ${getStatusTag(r)} ${r.quadrant ? `<span class="tag tag-q">${r.quadrant}</span>` : ''}
+      <span style="color: var(--muted); font-size: 11px; margin-left: 8px">${r.daysOver ? r.daysOver + ' Tage überfällig' : 'Fällig: ' + r.due}</span>
+      ${r.doneAt ? `<span style="color: var(--green); font-size: 11px; margin-left: 8px">Erledigt: ${r.doneAt}</span>` : ''}
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">📌 Kontext & Hintergrund</label>
+      <textarea class="form-textarea" id="editContext" placeholder="Was ist der Hintergrund? Worum geht es genau? Links, Kontakte, Details...">${r.context}</textarea>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label timmy-label">Timmy-Anweisung</label>
+      <textarea class="form-textarea timmy-field" id="editTimmy" placeholder="Was soll Timmy damit tun? z.B. 'Recherchiere Optionen und schreibe eine E-Mail-Vorlage'">${r.timmyHint}</textarea>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">🎯 Aktion für Timmy</label>
+      <div class="action-tags" id="actionTags">
+        ${actions.map(a => `<div class="action-tag${r.action === a ? ' selected' : ''}" data-action="${a}" onclick="setAction(${r.id}, '${a}')">${actionLabels[a]}</div>`).join('')}
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">⚡ Priorität</label>
+      <select class="form-select" id="editPriority" onchange="updateField(${r.id}, 'priority', this.value)">
+        <option value="high" ${r.priority === 'high' ? 'selected' : ''}>🔴 Hoch</option>
+        <option value="medium" ${r.priority === 'medium' ? 'selected' : ''}>🟡 Mittel</option>
+        <option value="low" ${r.priority === 'low' ? 'selected' : ''}>🟢 Niedrig</option>
+      </select>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">🏷️ Quadrant ändern</label>
+      <select class="form-select" id="editQuadrant" onchange="updateField(${r.id}, 'quadrant', this.value)">
+        <option value="Q1" ${r.quadrant === 'Q1' ? 'selected' : ''}>Q1 — Sofort handeln</option>
+        <option value="Q2" ${r.quadrant === 'Q2' ? 'selected' : ''}>Q2 — Einplanen</option>
+        <option value="Q3" ${r.quadrant === 'Q3' ? 'selected' : ''}>Q3 — Schnell weg</option>
+        <option value="Q4" ${r.quadrant === 'Q4' ? 'selected' : ''}>Q4 — Detox</option>
+      </select>
+    </div>
+
+    <div class="btn-row">
+      <button class="btn btn-primary" onclick="saveReminder(${r.id})">💾 Speichern</button>
+      <button class="btn btn-outline" onclick="deleteReminder(${r.id})" style="color: var(--red)">🗑️ Löschen</button>
+      <button class="btn btn-outline" onclick="clearSelection()">Schließen</button>
+    </div>
+  </div>`;
+}
+
+function setAction(id, action) {
+  const r = reminders.find(x => x.id === id);
+  if (!r) return;
+  r.action = r.action === action ? '' : action;
+  saveData();
+  renderEditPanel(r);
+}
+
+function updateField(id, field, value) {
+  const r = reminders.find(x => x.id === id);
+  if (r) { r[field] = value; saveData(); }
+}
+
+function saveReminder(id) {
+  const r = reminders.find(x => x.id === id);
+  if (!r) return;
+  r.context = document.getElementById('editContext').value;
+  r.timmyHint = document.getElementById('editTimmy').value;
+  r.priority = document.getElementById('editPriority').value;
+  r.quadrant = document.getElementById('editQuadrant').value;
+  saveData();
+  renderAll();
+  showToast('Gespeichert! Timmy kann jetzt den Kontext nutzen.');
+}
+
+function deleteReminder(id) {
+  if (!confirm('Aufgabe wirklich löschen?')) return;
+  const idx = reminders.findIndex(x => x.id === id);
+  if (idx > -1) reminders.splice(idx, 1);
+  selectedId = null;
+  saveData();
+  renderAll();
+  clearSelection();
+  showToast('Aufgabe gelöscht.');
+}
+
+function clearSelection() {
+  selectedId = null;
+  renderReminders();
+  document.getElementById('editPanel').innerHTML = `<div class="card" style="border-color: var(--border)">
+    <div class="edit-empty"><div class="edit-empty-icon">🪡</div><div>Klicke auf einen Reminder,<br>um Kontext & Hinweise hinzuzufügen</div></div>
+  </div>`;
+}
+
+// ========== EXPORT ==========
+function exportForTimmy() {
+  const enriched = reminders.filter(r => r.context || r.timmyHint || r.action);
+  const allData = reminders.filter(r => r.status !== 'done');
+  const doneData = reminders.filter(r => r.status === 'done');
+
+  let output = `# Timmy Dashboard Export — ${new Date().toLocaleDateString('de-DE')}\n`;
+  output += `# Generiert für automatische Verarbeitung durch Timmy\n\n`;
+  output += `## Zusammenfassung\n`;
+  output += `Gesamt aktiv: ${allData.length} | Erledigt: ${doneData.length}\n`;
+  output += `Mit Kontext: ${enriched.length}\n`;
+  output += `Überfällig: ${allData.filter(r => r.status === 'overdue').length}\n\n`;
+
+  output += `## Aktive Aufgaben\n\n`;
+  allData.forEach(r => {
+    output += `### ${r.title}\n`;
+    output += `- Status: ${r.status} | Quadrant: ${r.quadrant} | Priorität: ${r.priority}\n`;
+    output += `- Fällig: ${r.due}${r.daysOver ? ` (${r.daysOver} Tage überfällig)` : ''}\n`;
+    if (r.action) output += `- Aktion: ${r.action}\n`;
+    if (r.context) output += `- Kontext: ${r.context}\n`;
+    if (r.timmyHint) output += `- Timmy-Anweisung: ${r.timmyHint}\n`;
+    output += `\n`;
+  });
+
+  if (doneData.length) {
+    output += `## Kürzlich erledigt\n\n`;
+    doneData.forEach(r => output += `- ✅ ${r.title}${r.doneAt ? ` (${r.doneAt})` : ''}\n`);
+    output += '\n';
+  }
+
+  output += `## Aktionsübersicht\n\n`;
+  ['auto', 'remind', 'research', 'draft', 'delegate', 'archive'].forEach(action => {
+    const items = allData.filter(r => r.action === action);
+    if (items.length) {
+      output += `### ${action.toUpperCase()}\n`;
+      items.forEach(r => output += `- ${r.title}${r.timmyHint ? ': ' + r.timmyHint : ''}\n`);
+      output += '\n';
+    }
+  });
+
+  showModal(output);
+}
+
+function showModal(content) {
+  document.getElementById('modalContainer').innerHTML = `
+    <div class="modal-overlay" onclick="closeModal(event)">
+      <div class="modal" onclick="event.stopPropagation()">
+        <h3>🦞 Timmy Export</h3>
+        <p style="color: var(--muted); font-size: 13px; margin-bottom: 14px">Kopiere diesen Text und füge ihn in eine Timmy-Session ein:</p>
+        <pre id="exportContent">${escapeHtml(content)}</pre>
+        <div class="btn-row" style="margin-top: 16px">
+          <button class="btn btn-primary" onclick="copyExport()">📋 Kopieren</button>
+          <button class="btn btn-export" onclick="downloadExport()">💾 Als Datei speichern</button>
+          <button class="btn btn-outline" onclick="closeModal()">Schließen</button>
+        </div>
+      </div>
+    </div>`;
+}
+
+function closeModal(e) {
+  if (!e || e.target.classList.contains('modal-overlay')) document.getElementById('modalContainer').innerHTML = '';
+}
+
+function copyExport() {
+  navigator.clipboard.writeText(document.getElementById('exportContent').textContent).then(() => showToast('In die Zwischenablage kopiert!'));
+}
+
+function downloadExport() {
+  const blob = new Blob([document.getElementById('exportContent').textContent], { type: 'text/markdown' });
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
+  a.download = `timmy-export-${new Date().toISOString().slice(0,10)}.md`; a.click();
+  showToast('Datei heruntergeladen!');
+}
+
+function escapeHtml(t) { return t.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+// ========== RESET ==========
+function resetData() {
+  if (!confirm('Alle Änderungen zurücksetzen? Originalzustand wird wiederhergestellt.')) return;
+  localStorage.removeItem(STORAGE_KEY);
+  location.reload();
+}
+
+// ========== TOAST ==========
+function showToast(msg) {
+  const c = document.getElementById('toastContainer');
+  c.innerHTML = `<div class="toast">${msg}</div>`;
+  setTimeout(() => c.innerHTML = '', 2500);
+}
+
+// ========== TABS ==========
+function showTab(id) {
+  ['overview','reminders','eisenhower','karma','detox'].forEach(t => document.getElementById(t).classList.add('hidden'));
+  document.getElementById(id).classList.remove('hidden');
+  document.querySelectorAll('.tab').forEach(el => el.classList.remove('active'));
+  event.target.closest('.tab').classList.add('active');
+  renderAll();
+}
+
+function renderAll() {
+  renderOverview();
+  renderReminders();
+  renderEisenhower();
+  renderDetox();
+}
+
+// ========== INIT ==========
+renderAll();
+</script>
+</body>
+</html>
