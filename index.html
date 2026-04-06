@@ -6,6 +6,18 @@
 <title>Timmy Dashboard</title>
 <link href="https://fonts.googleapis.com/css2?family=Patrick+Hand&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
 <style>
+/* PASSWORD GATE */
+#pw-gate { position:fixed; inset:0; z-index:99999; background:#faf3e8; background-image:repeating-linear-gradient(0deg,transparent,transparent 14px,rgba(160,132,92,0.06) 14px,rgba(160,132,92,0.06) 15px),repeating-linear-gradient(90deg,transparent,transparent 14px,rgba(160,132,92,0.06) 14px,rgba(160,132,92,0.06) 15px); display:flex; align-items:center; justify-content:center; font-family:'Nunito',sans-serif; }
+#pw-gate.hidden { display:none; }
+.pw-box { background:#fffdf8; border:3px dashed #a0845c; border-radius:18px; padding:40px 48px; text-align:center; box-shadow:4px 6px 0 rgba(139,109,71,0.12); animation:popIn 0.4s ease; max-width:360px; width:90%; }
+.pw-box h2 { font-family:'Patrick Hand',cursive; font-size:28px; color:#d4563a; margin-bottom:6px; }
+.pw-box .pw-sub { color:#8b7355; font-size:13px; font-style:italic; margin-bottom:24px; }
+.pw-box input { width:100%; padding:12px 16px; border:2px dashed #d4c4a8; border-radius:10px; font-size:15px; font-family:'Nunito',sans-serif; background:#faf3e8; color:#3d2e1f; text-align:center; outline:none; transition:border-color 0.2s; }
+.pw-box input:focus { border-color:#e07b4c; }
+.pw-box button { margin-top:16px; background:#e07b4c; color:#fff; border:none; border-radius:10px; padding:10px 32px; font-family:'Patrick Hand',cursive; font-size:18px; cursor:pointer; box-shadow:2px 3px 0 rgba(224,123,76,0.3); transition:all 0.2s; }
+.pw-box button:hover { background:#d4563a; transform:translateY(-2px); }
+.pw-box .pw-err { color:#c94a3a; font-size:12px; margin-top:10px; min-height:18px; }
+.pw-thread { height:3px; background:repeating-linear-gradient(90deg,#a0845c 0,#a0845c 8px,transparent 8px,transparent 16px); margin:16px 0; }
 @keyframes fadeIn { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
 @keyframes sway { 0%, 100% { transform: rotate(-1deg); } 50% { transform: rotate(1deg); } }
 @keyframes slideIn { from { opacity: 0; transform: translateX(20px); } to { opacity: 1; transform: translateX(0); } }
@@ -204,6 +216,21 @@ h3::after { content: ''; position: absolute; bottom: -3px; left: 0; width: 100%;
 </style>
 </head>
 <body>
+<!-- PASSWORD GATE -->
+<div id="pw-gate">
+<div class="pw-box">
+<h2>Timmy Dashboard</h2>
+<div class="pw-sub">Zugang nur mit Passwort</div>
+<div class="pw-thread"></div>
+<input type="password" id="pw-input" placeholder="Passwort eingeben..." onkeydown="if(event.key==='Enter')checkPw()">
+<button onclick="checkPw()">Eintreten</button>
+<div class="pw-err" id="pw-err"></div>
+</div>
+</div>
+<script>
+function checkPw(){var p=document.getElementById('pw-input').value;if(btoa(p)==='a2VpblBhc3N3b3J0'){document.getElementById('pw-gate').classList.add('hidden');sessionStorage.setItem('tw_auth','1')}else{document.getElementById('pw-err').textContent='Falsches Passwort';document.getElementById('pw-input').value='';document.getElementById('pw-input').focus()}}
+if(sessionStorage.getItem('tw_auth')==='1'){document.getElementById('pw-gate').classList.add('hidden')}
+</script>
 
 <div class="header">
   <div>
