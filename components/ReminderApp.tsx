@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
+import Link from 'next/link'
 import { Reminder } from '@/lib/types'
 import ReminderTable from './ReminderTable'
 import ContextPanel from './ContextPanel'
@@ -128,6 +129,13 @@ export default function ReminderApp({ initialReminders }: { initialReminders: Re
         <span style={{ fontWeight: 700, fontSize: 14, color: 'var(--text)', letterSpacing: '-0.01em' }}>
           timmy-context
         </span>
+        <span style={{ color: 'var(--border)' }}>|</span>
+        <Link href="/" style={{ fontSize: 13, fontWeight: 700, color: 'var(--blue)', textDecoration: 'none' }}>
+          Reminders
+        </Link>
+        <Link href="/daily" style={{ fontSize: 13, color: 'var(--muted)', textDecoration: 'none' }}>
+          Daily
+        </Link>
         <div style={{ flex: 1 }} />
         <button
           onClick={handleSync}
