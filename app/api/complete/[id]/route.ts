@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { execSync } from 'child_process'
+import { spawnSync } from 'child_process'
 import { getDb } from '@/lib/db'
 
 const COMPLETE_SCRIPT = '/Users/karsten/bin/reminder-complete.sh'
@@ -17,7 +17,16 @@ export async function POST(
       return NextResponse.json({ success: false, message: 'Reminder not found' }, { status: 404 })
     }
 
-    execSync(`${COMPLETE_SCRIPT} "${id}"`)
+    const result = spawnSync(COMPLETE_SCRIPT, [id], {
+      encoding: 'utf-8',
+      timeout: 10000,
+    })
+    if (result.status !== 0) {
+      return NextResponse.json(
+        { success: false, message: result.stderr || 'Script failed' },
+        { status: 500 }
+      )
+    }
 
     db.prepare('UPDATE reminders SET is_completed = 1 WHERE apple_id = ?').run(id)
 

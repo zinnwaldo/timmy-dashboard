@@ -46,47 +46,43 @@ export async function PATCH(
     }
 
     const body = await request.json()
-    const {
-      quadrant,
-      context_text,
-      ai_task,
-      estimate_min,
-      tags,
-      ai_status,
-      ai_output,
-      blocked_reason,
-    } = body
-
     const now = new Date().toISOString()
 
-    // Determine if last_processed should be updated
-    const updateLastProcessed = ai_status !== undefined || ai_output !== undefined
+    // Fetch existing context row (may be null if no context yet)
+    const existing = db.prepare('SELECT * FROM context WHERE apple_id = ?').get(id) as Record<string, unknown> | undefined
+
+    // Mergeable fields — only fields present in body override; absent fields keep DB value
+    const contextFields = ['quadrant', 'context_text', 'ai_task', 'estimate_min', 'tags', 'ai_status', 'ai_output', 'blocked_reason'] as const
+
+    const merged: Record<string, unknown> = {}
+    for (const field of contextFields) {
+      if (field in body) {
+        // Explicit value from client — may be null (null-reset allowed)
+        merged[field] = body[field] ?? null
+      } else {
+        // Not in body — preserve existing DB value (or null for new rows)
+        merged[field] = existing ? (existing[field] ?? null) : null
+      }
+    }
 
     db.prepare(`
       INSERT INTO context (apple_id, quadrant, context_text, ai_task, estimate_min, tags, ai_status, ai_output, blocked_reason, last_processed, updated_at)
       VALUES (@apple_id, @quadrant, @context_text, @ai_task, @estimate_min, @tags, @ai_status, @ai_output, @blocked_reason, @last_processed, @updated_at)
       ON CONFLICT(apple_id) DO UPDATE SET
-        quadrant       = COALESCE(@quadrant, quadrant),
-        context_text   = COALESCE(@context_text, context_text),
-        ai_task        = COALESCE(@ai_task, ai_task),
-        estimate_min   = COALESCE(@estimate_min, estimate_min),
-        tags           = COALESCE(@tags, tags),
-        ai_status      = COALESCE(@ai_status, ai_status),
-        ai_output      = COALESCE(@ai_output, ai_output),
-        blocked_reason = COALESCE(@blocked_reason, blocked_reason),
-        last_processed = CASE WHEN @last_processed IS NOT NULL THEN @last_processed ELSE last_processed END,
+        quadrant       = @quadrant,
+        context_text   = @context_text,
+        ai_task        = @ai_task,
+        estimate_min   = @estimate_min,
+        tags           = @tags,
+        ai_status      = @ai_status,
+        ai_output      = @ai_output,
+        blocked_reason = @blocked_reason,
+        last_processed = @last_processed,
         updated_at     = @updated_at
     `).run({
       apple_id: id,
-      quadrant: quadrant ?? null,
-      context_text: context_text ?? null,
-      ai_task: ai_task ?? null,
-      estimate_min: estimate_min ?? null,
-      tags: tags ?? null,
-      ai_status: ai_status ?? null,
-      ai_output: ai_output ?? null,
-      blocked_reason: blocked_reason ?? null,
-      last_processed: updateLastProcessed ? now : null,
+      ...merged,
+      last_processed: now,
       updated_at: now,
     })
 
